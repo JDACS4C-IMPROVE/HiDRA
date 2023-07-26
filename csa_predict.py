@@ -25,8 +25,8 @@ from sklearn.model_selection import KFold, train_test_split
 file_path = os.path.dirname(os.path.realpath(__file__))
 import candle
 data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
-test_source = os.environ['TEST_SOURCE'].rstrip('/')
-train_source = os.environ['TRAIN_SOURCE'].rstrip('/')
+test_source = os.environ['TEST_DATA_SOURCE'].rstrip('/')
+train_source = os.environ['TRAIN_DATA_SOURCE'].rstrip('/')
 split = os.environ['SPLIT'].rstrip('/')
 
 additional_definitions = []
@@ -89,22 +89,18 @@ def run(gParameters):
     loss = gParameters['loss']
     output_dir = gParameters['output_dir']
 
-    # y_col_name = "auc1"
-    # source_data_name = "CCLE"
     y_col_name =  "auc"
-    source_data_name = "GDSCv2"
-    split = 'all'
 
-    if isinstance(split, int):
-        split_name = source_data_name + '_split' + str(split) + '_test.csv'
+    if test_source!=train_source:
+        split_name = test_source + '_all'
 
     else:
-        split_name = source_data_name + '_all'
+        split_name = test_source + '_split' + str(split) + '_test'
 
     auc_test = pd.read_csv(data_dir + '/rsp_' + split_name + '.csv', index_col=0)
-    expr = pd.read_csv(data_dir + '/ge_' + source_data_name + '.csv', index_col=0)
+    expr = pd.read_csv(data_dir + '/ge_' + test_source + '.csv', index_col=0)
     GeneSet_Dic = json.load(open(data_dir + '/geneset.json', 'r'))
-    drugs = pd.read_csv(data_dir + '/ecfp2_' + source_data_name + '.csv', index_col=0)
+    drugs = pd.read_csv(data_dir + '/ecfp2_' + test_source + '.csv', index_col=0)
 
     # Training
     test_label = auc_test[y_col_name]

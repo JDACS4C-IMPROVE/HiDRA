@@ -26,7 +26,7 @@ file_path = os.path.dirname(os.path.realpath(__file__))
 import candle
 
 data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
-train_source = os.environ['TRAIN_SOURCE'].rstrip('/')
+train_source = os.environ['TRAIN_DATA_SOURCE'].rstrip('/')
 split = os.environ['SPLIT'].rstrip('/')
 
 additional_definitions = []

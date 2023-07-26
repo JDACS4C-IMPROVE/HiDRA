@@ -1,51 +1,70 @@
-def main():
-    import numpy as np
-    import pandas as pd
-    import os
-    import json
-    import argparse
-    from scipy.stats import zscore
-    import candle
-    import sys
-    sys.path.append('../benchmark-dataset-generator')
-    import improve_utils
+import numpy as np
+import pandas as pd
+import os
+import json
+import argparse
+from scipy.stats import zscore
+import candle
+import sys
+sys.path.append('../benchmark-dataset-generator')
+import improve_utils
 
-    data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
+
+def main():
     split = os.environ['SPLIT'].rstrip('/')
-    train_source = os.environ['TRAIN_SOURCE'].rstrip('/')
+    train_source = os.environ['TRAIN_DATA_SOURCE'].rstrip('/')
+    test_source = os.environ['TEST_DATA_SOURCE'].rstrip('/')
 
     # y_col_name = "auc1"
     # source_data_name = "CCLE"
     y_col_name = "auc"
 
+    process_split(train_source, split, y_col_name)
+
+    if train_source!=test_source:
+        process_split(test_source, 'all', y_col_name)
+
+
+def process_split(data_source, split, y_col_name):
+    data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
+
+    try:
+        split = int(split)
+
+    except:
+        pass
+
     if isinstance(split, int):
-        split += 1
         rs_tr = improve_utils.load_single_drug_response_data_v2(
-        source=source_data_name,
-        split_file_name=f"{train_source}_split_{split}_train.txt",
+        source=data_source,
+        split_file_name=f"{data_source}_split_{split}_train.txt",
         y_col_name=y_col_name)
 
+        print("SPLIT " + str(split))
+
         rs_vl = improve_utils.load_single_drug_response_data_v2(
-        source=source_data_name,
-        split_file_name=f"{train_source}_split_{split}_val.txt",
+        source=data_source,
+        split_file_name=f"{data_source}_split_{split}_val.txt",
         y_col_name=y_col_name)
 
         rs_te = improve_utils.load_single_drug_response_data_v2(
-        source=source_data_name,
-        split_file_name=f"{train_source}_split_{split}_test.txt",
+        source=data_source,
+        split_file_name=f"{data_source}_split_{split}_test.txt",
         y_col_name=y_col_name)
 
-        rs_tr.to_csv(data_dir + '/rsp_' + train_source + '_split' + str(split) + '_train.csv')
-        rs_vl.to_csv(data_dir + '/rsp_' + train_source + '_split' + str(split) + '_val.csv')
-        rs_te.to_csv(data_dir + '/rsp_' + train_source + '_split' + str(split) + '_test.csv')
+        print(data_source)
+
+        rs_tr.to_csv(data_dir + '/rsp_' + data_source + '_split' + str(split) + '_train.csv')
+        rs_vl.to_csv(data_dir + '/rsp_' + data_source + '_split' + str(split) + '_val.csv')
+        rs_te.to_csv(data_dir + '/rsp_' + data_source + '_split' + str(split) + '_test.csv')
 
     else:
         rs_te = improve_utils.load_single_drug_response_data_v2(
-        source=source_data_name,
-        split_file_name=f"{train_source}_all.txt",
+        source=data_source,
+        split_file_name=f"{data_source}_all.txt",
         y_col_name=y_col_name)
 
-        rs_te.to_csv(data_dir + '/rsp_' + source_data_name + '_all.csv')
+        rs_te.to_csv(data_dir + '/rsp_' + data_source + '_all.csv')
 
 
     # Loading cell line expression data
@@ -81,12 +100,12 @@ def main():
     expression_df = expression_df.drop(drop_rows)
 
     # Save trimmed and normalized expression file and pathway/gene dictionary
-    expression_df.to_csv(data_dir + '/ge_' + source_data_name + '.csv')
+    expression_df.to_csv(data_dir + '/ge_' + data_source + '.csv')
     json.dump(GeneSet_Dic, open(data_dir + '/geneset.json', 'w'))
 
     # Load drug fingerprints file
     drug_fng = improve_utils.load_morgan_fingerprint_data()
-    drug_fng.to_csv(data_dir + '/ecfp2_' + source_data_name + '.csv')
+    drug_fng.to_csv(data_dir + '/ecfp2_' + data_source + '.csv')
 
 
 if __name__=="__main__":
