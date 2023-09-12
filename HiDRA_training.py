@@ -19,7 +19,7 @@ from tensorflow.keras.models import Model, Sequential, load_model
 from tensorflow.keras.layers import Input, Dense, Dropout, BatchNormalization
 from tensorflow.keras.layers import concatenate, multiply, dot, Activation
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.model_selection import KFold, train_test_split
 
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -218,7 +218,10 @@ def run(gParameters):
     model_saver = ModelCheckpoint(output_dir + '/model.hdf5', monitor='val_loss',
                                   save_best_only=True, save_weights_only=False)
 
-    callbacks = [model_saver]
+    model_stopper = EarlyStopping(monitor='val_loss', restore_best_weights=True,
+                                  patience=10)
+
+    callbacks = [model_saver, modele_stopper]
 
     model = Making_Model(GeneSet_Dic)
     model.compile(loss=loss, optimizer=optimizer)
