@@ -46,7 +46,7 @@ def main():
     expression_df = expression_df.apply(zscore)
 
     # Loading Gene Sets
-    GeneSetFile = 'raw_data/geneset.gmt'
+    GeneSetFile = data_dir + '/common/geneset.gmt'
     GeneSet = []
     GeneSet_Dic = {}
 
