@@ -221,7 +221,7 @@ def run(gParameters):
     model_stopper = EarlyStopping(monitor='val_loss', restore_best_weights=True,
                                   patience=10)
 
-    callbacks = [model_saver, modele_stopper]
+    callbacks = [model_saver, model_stopper]
 
     model = Making_Model(GeneSet_Dic)
     model.compile(loss=loss, optimizer=optimizer)
