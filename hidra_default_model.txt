@@ -1,5 +1,5 @@
 [Global_Params]
-epochs=1
+epochs=20
 batch_size=1024
 optimizer='adam'
 learning_rate = 0.001
