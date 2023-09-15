@@ -13,8 +13,8 @@ def main():
     files = ['Cell_line_RMA_proc_basalExp.txt', 'TableS1E.csv', 'TableS4A.csv',
              'drug.csv', 'drug_alias.txt']
 
-#    for fname in files:
-#        candle.file_utils.get_file(fname, dir_url + fname)
+    for fname in files:
+        candle.file_utils.get_file(fname, dir_url + fname)
 
     # Loading cell line expression data
     expression_df = pd.read_csv(data_dir + '/' + files[0], sep='\t', index_col=0)
