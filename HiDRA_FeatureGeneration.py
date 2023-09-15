@@ -9,16 +9,16 @@ def main():
 #    os.environ['CANDLE_DATA_DIR'] = 'raw_data/'
     data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
 
-    dir_url = 'ftp://ftp.mcs.anl.gov/pub/candle/public/improve/hidra/raw_data/'
+    dir_url = 'ftp://ftp.mcs.anl.gov/pub/candle/public/improve/model_curation_data/hidra/raw_data/'
     files = ['Cell_line_RMA_proc_basalExp.txt', 'TableS1E.csv', 'TableS4A.csv',
-             'drug.csv', 'drug_alias.txt']
+             'drug.csv', 'drug_alias.txt', 'geneset.gmt']
 
     for fname in files:
         candle.file_utils.get_file(fname, dir_url + fname)
 
     # Loading cell line expression data
-    expression_df = pd.read_csv(data_dir + '/' + files[0], sep='\t', index_col=0)
-    cl_metadata = pd.read_csv(data_dir + '/' + files[1], header=2, dtype=str)
+    expression_df = pd.read_csv(data_dir + '/common/' + files[0], sep='\t', index_col=0)
+    cl_metadata = pd.read_csv(data_dir + '/common/' + files[1], header=2, dtype=str)
 
     # Change COSMIC IDs for cell line names and remove extra columns
     cl_dict = dict(zip(cl_metadata['COSMIC identifier'], cl_metadata['Sample Name']))
@@ -46,7 +46,7 @@ def main():
     expression_df = expression_df.apply(zscore)
 
     # Loading Gene Sets
-    GeneSetFile = data_dir + '/geneset.gmt'
+    GeneSetFile = data_dir + '/common/geneset.gmt'
     GeneSet = []
     GeneSet_Dic = {}
 
@@ -73,8 +73,8 @@ def main():
     json.dump(GeneSet_Dic, open(data_dir + '/geneset.json', 'w'))
 
     # Load drug fingerprints file
-    drug_fng = pd.read_csv(data_dir + '/' + files[3], index_col=0)
-    drug_alias = pd.read_csv(data_dir + '/' + files[4], sep='\t', header=None, names=['Old File', 'New File'])
+    drug_fng = pd.read_csv(data_dir + '/common/' + files[3], index_col=0)
+    drug_alias = pd.read_csv(data_dir + '/common/' + files[4], sep='\t', header=None, names=['Old File', 'New File'])
 
     # Update drug names
     dr_dict = dict(zip(drug_alias['Old File'], drug_alias['New File']))
@@ -86,7 +86,7 @@ def main():
     drug_fng.to_csv(data_dir + '/ecfp2_GDSC1000.csv')
 
     # Read IC50 table and remove drugs/cell lines not present in metadata
-    response = pd.read_csv(data_dir + '/' + files[2])
+    response = pd.read_csv(data_dir + '/common/' + files[2])
 
     # Reformat response data
     response = response.melt(id_vars=['Sample Names'])
