@@ -87,8 +87,8 @@ def run(gParameters):
     loss = gParameters['loss']
     output_dir = gParameters['output_dir']
 
-    y_col_name = "ic50"
-    source_data_name = "gdsc1"
+    y_col_name = "IC50"
+    source_data_name = "GDSC1000"
 
     # These files do not yet exist on the ftp - run HiDRA_FeatureGeneration_benchmark.py to create them
 #    dir_url = 'ftp://ftp.mcs.anl.gov/pub/candle/public/improve/hidra/preprocessed_data/'

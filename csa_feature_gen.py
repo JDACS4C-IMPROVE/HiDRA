@@ -6,7 +6,7 @@ import argparse
 from scipy.stats import zscore
 import candle
 import sys
-sys.path.append('../benchmark-dataset-generator')
+#sys.path.append('../benchmark-dataset-generator')
 import improve_utils
 
 
@@ -16,7 +16,6 @@ def main():
     test_source = os.environ['TEST_DATA_SOURCE'].rstrip('/')
 
     # y_col_name = "auc1"
-    # source_data_name = "CCLE"
     y_col_name = "auc"
 
     process_split(train_source, split, y_col_name)
@@ -40,8 +39,6 @@ def process_split(data_source, split, y_col_name):
         split_file_name=f"{data_source}_split_{split}_train.txt",
         y_col_name=y_col_name)
 
-        print("SPLIT " + str(split))
-
         rs_vl = improve_utils.load_single_drug_response_data_v2(
         source=data_source,
         split_file_name=f"{data_source}_split_{split}_val.txt",
@@ -51,8 +48,6 @@ def process_split(data_source, split, y_col_name):
         source=data_source,
         split_file_name=f"{data_source}_split_{split}_test.txt",
         y_col_name=y_col_name)
-
-        print(data_source)
 
         rs_tr.to_csv(data_dir + '/rsp_' + data_source + '_split' + str(split) + '_train.csv')
         rs_vl.to_csv(data_dir + '/rsp_' + data_source + '_split' + str(split) + '_val.csv')
@@ -77,7 +72,7 @@ def process_split(data_source, split, y_col_name):
     expression_df = expression_df.apply(zscore)
 
     # Loading Gene Sets
-    GeneSetFile = 'raw_data/geneset.gmt'
+    GeneSetFile = data_dir + '/csa_data/raw_data/geneset.gmt'
     GeneSet = []
     GeneSet_Dic = {}
 

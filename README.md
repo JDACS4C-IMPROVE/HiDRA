@@ -10,15 +10,69 @@ HiDRA consists of four smaller networks: a drug feature encoding network, which 
 - pandas (1.1.5)
 - openpyxl (3.0.9)
 
-## Data Required
+## Setup
 
-Four data files are required:
-- A KEGG pathway file, where each line is a pathway name followed by a list of gene symbols (included in the repository as geneset.gmt)
-- A gene expression file with gene symbols as rows and cell lines as columns. Ideally this file will contain all or most genes present in geneset.gmt. The original publication uses GDSC1000 data which can be downloaded [here](https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources//Data/preprocessed/Cell_line_RMA_proc_basalExp.txt.zip)
-- A 512-bit Morgan fingerprint drug file. The original publication converts SMILES strings for 235 drugs to fingerprints using RDKit.
-- A response table of cancer/drug pairs. The original publication uses GDSC1000 IC50 values which can be downloaded [here](https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources//Data/suppData/TableS4A.xlsx)
+After cloning this repository, setup the environment with
+```
+conda env create -f environment.yml
+conda activate hidra
+pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
+```
 
-## Data Preprocessing
+## Data
+
+All data must be placed within a data directory we will call `my_data_dir`.
+
+Four files are required to run HiDRA:
+    - A KEGG pathway file, where each line is a pathway name followed by a list of gene symbols
+    - A gene expression file with gene symbols as rows and cell lines as columns. Ideally this file will contain all or most genes present in the KEGG pathway file
+    - A 512-bit Morgan fingerprint drug file
+    - A response table of cancer/drug pairs
+
+To use the IMPROVE benchmark dataset, the user must set up the directory structure
+```
+mkdir my_data_dir/csa_data
+mkdir my_data_dir/csa_data/raw_data
+mkdir my_data_dir/csa_data/raw_data/y_data
+mkdir my_data_dir/csa_data/raw_data/x_data
+mkdir my_data_dir/csa_data/raw_data/splits
+```
+
+Data must then be downloaded from the IMPROVE FTP with `wget`.
+
+```
+wget -P my_data_dir/csa_data/raw_data/y_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/y_data/response.tsv
+
+wget -P my_data_dir/csa_data/raw_data/x_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/x_data/cancer_gene_expression.tsv
+
+wget -P my_data_dir/csa_data/raw_data/x_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/x_data/drug_ecfp4_nbits512.tsv
+
+wget -P my_data_dir/csa_data/raw_data https://ftp.mcs.anl.gov/pub/candle/public/improve/model_curation_data/hidra/raw_data/geneset.gmt
+```
+
+If we want to train on CCLE training data and test on CCLE testing data we also download the split files:
+```
+wget -P csa_data/raw_data/splits https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/splits/CCLE_split_0_train.txt
+
+wget -P csa_data/raw_data/splits https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/splits/CCLE_split_0_val.txt
+
+wget -P csa_data/raw_data/splits https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/splits/CCLE_split_0_test.txt
+```
+
+## Creating Models
+
+To run training and testing, the user must specify a device (GPU) to use. If we want to train on GPU 3 we run:
+```
+CUDA_VISIBLE_DEVICES=3 CANDLE_DATA_DIR=my_data_dir SPLIT=0 TRAIN_DATA_SOURCE=CCLE TEST_DATA_SOURCE=CCLE python csa_feature_gen.py
+
+CUDA_VISIBLE_DEVICES=3 CANDLE_DATA_DIR=my_data_dir SPLIT=0 TRAIN_DATA_SOURCE=CCLE TEST_DATA_SOURCE=CCLE python csa_training.py
+
+CUDA_VISIBLE_DEVICES=3 CANDLE_DATA_DIR=my_data_dir SPLIT=0 TRAIN_DATA_SOURCE=CCLE TEST_DATA_SOURCE=CCLE python csa_predict.py
+```
+
+Training hyperparameters are set in `hidra_default_model.txt`.
+
+## Data Preprocessing Steps
 
 Data preprocessing includes the following steps:
 - Download gene expression, drug fingerprint, and response pair data from FTP site
@@ -30,13 +84,5 @@ Data preprocessing includes the following steps:
 If using the original GDSC1000 data, a few extra reformatting steps are needed:
 - Load expression dataset, remove genes without valid symbols, and change COSMIC identifiers to sample names to be consistent with response data
 - Load response data, reformat pivot table into a list of pairs, and remove any entries with no fingerprint or expression data
-	
-Preprocessing steps are performed in HiDRA_FeatureGeneration.py
-	
-## Model Training
 
-Training hyperparameters are specified in hidra_default_model.txt. HiDRA_training.py splits data into training and validation, reformats expression data by pathway, and builds the model. It produces an hdf5 model file and validation results.
-
-HiDRA_predict.py also requires the hidra_default_model.txt parameters file, reformats test data into pathways, and saves predictions.
-
-train.sh sets which GPU to use, sets the data directory, and runs preprocessing and training scripts. 
+preprocess.sh, train.sh, and infer.sh set which GPU to use, set the data directory, and run preprocessing, training, and testing scripts, respectively. 
