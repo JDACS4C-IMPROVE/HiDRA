@@ -21,7 +21,7 @@ pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
 
 ## Data
 
-All data must be placed within a data directory we will call `my_data_dir`.
+All data must be placed within a directory `csa_data`.
 
 Four files are required to run HiDRA:
     - A KEGG pathway file, where each line is a pathway name followed by a list of gene symbols
@@ -31,23 +31,23 @@ Four files are required to run HiDRA:
 
 To use the IMPROVE benchmark dataset, the user must set up the directory structure
 ```
-mkdir my_data_dir/csa_data
-mkdir my_data_dir/csa_data/raw_data
-mkdir my_data_dir/csa_data/raw_data/y_data
-mkdir my_data_dir/csa_data/raw_data/x_data
-mkdir my_data_dir/csa_data/raw_data/splits
+mkdir csa_data
+mkdir csa_data/raw_data
+mkdir csa_data/raw_data/y_data
+mkdir csa_data/raw_data/x_data
+mkdir csa_data/raw_data/splits
 ```
 
 Data must then be downloaded from the IMPROVE FTP with `wget`.
 
 ```
-wget -P my_data_dir/csa_data/raw_data/y_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/y_data/response.tsv
+wget -P csa_data/raw_data/y_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/y_data/response.tsv
 
-wget -P my_data_dir/csa_data/raw_data/x_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/x_data/cancer_gene_expression.tsv
+wget -P csa_data/raw_data/x_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/x_data/cancer_gene_expression.tsv
 
-wget -P my_data_dir/csa_data/raw_data/x_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/x_data/drug_ecfp4_nbits512.tsv
+wget -P csa_data/raw_data/x_data https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data/x_data/drug_ecfp4_nbits512.tsv
 
-wget -P my_data_dir/csa_data/raw_data https://ftp.mcs.anl.gov/pub/candle/public/improve/model_curation_data/hidra/raw_data/geneset.gmt
+wget -P csa_data/raw_data https://ftp.mcs.anl.gov/pub/candle/public/improve/model_curation_data/hidra/raw_data/geneset.gmt
 ```
 
 If we want to train on CCLE training data and test on CCLE testing data we also download the split files:
@@ -61,7 +61,7 @@ wget -P csa_data/raw_data/splits https://ftp.mcs.anl.gov/pub/candle/public/impro
 
 ## Creating Models
 
-To run training and testing, the user must specify a device (GPU) to use. If we want to train on GPU 3 we run:
+To run training and testing, the user must specify a device (GPU) to use and a directory to store processed data and output. If we want to train on GPU 3 we run:
 ```
 CUDA_VISIBLE_DEVICES=3 CANDLE_DATA_DIR=my_data_dir SPLIT=0 TRAIN_DATA_SOURCE=CCLE TEST_DATA_SOURCE=CCLE python csa_feature_gen.py
 
