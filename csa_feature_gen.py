@@ -71,7 +71,7 @@ def process_split(data_source, split, y_col_name):
     expression_df = expression_df.apply(zscore)
 
     # Loading Gene Sets
-    GeneSetFile = data_dir + '/csa_data/raw_data/geneset.gmt'
+    GeneSetFile = 'csa_data/raw_data/geneset.gmt'
     GeneSet = []
     GeneSet_Dic = {}
 
