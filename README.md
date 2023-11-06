@@ -24,10 +24,10 @@ pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
 All data must be placed within a directory `csa_data`.
 
 Four files are required to run HiDRA:
-    - A KEGG pathway file, where each line is a pathway name followed by a list of gene symbols
-    - A gene expression file with gene symbols as rows and cell lines as columns. Ideally this file will contain all or most genes present in the KEGG pathway file
-    - A 512-bit Morgan fingerprint drug file
-    - A response table of cancer/drug pairs
+- A KEGG pathway file, where each line is a pathway name followed by a list of gene symbols
+- A gene expression file with gene symbols as rows and cell lines as columns. Ideally this file will contain all or most genes present in the KEGG pathway file
+- A 512-bit Morgan fingerprint drug file
+- A response table of cancer/drug pairs
 
 To use the IMPROVE benchmark dataset, the user must set up the directory structure
 ```
