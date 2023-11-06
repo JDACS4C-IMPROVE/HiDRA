@@ -26,6 +26,9 @@ def main():
 def process_split(data_source, split, y_col_name):
     data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
 
+    if not os.path.isdir(data_dir):
+        os.mkdir(data_dir)
+
     try:
         split = int(split)
 
