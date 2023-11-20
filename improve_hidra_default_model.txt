@@ -1,0 +1,19 @@
+[Global_Params]
+model_name='hidra'
+
+[Preprocess]
+ml_data_outdir = "./ml_data"
+x_data_canc_files = [["cancer_gene_expression.tsv", ["Gene_Symbol"]]]
+x_data_drug_files = [["drug_ecfp4_nbits512.tsv"]]
+y_data_files = [["response.tsv"]]
+train_split_file = "CCLE_split_0_train.txt"
+val_split_file = "CCLE_split_0_val.txt"
+test_split_file = "CCLE_split_0_test.txt"
+kegg_pathway_file = "csa_data/raw_data/geneset.gmt"
+
+[Train]
+epochs=2
+batch_size=1024
+optimizer='adam'
+learning_rate = 0.001
+loss='mean_squared_error'
