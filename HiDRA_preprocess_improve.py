@@ -105,6 +105,8 @@ def run(params):
     dd = drp.DrugsLoader(params)
     print(dd)
 
+    ge.to_csv(processed_outdir/'cancer_ge_kegg.csv', index=False)
+
     stages = {"train": params["train_split_file"],
               "val": params["val_split_file"],
               "test": params["test_split_file"]}
