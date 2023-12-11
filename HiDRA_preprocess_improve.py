@@ -22,7 +22,7 @@ model_preproc_params = [
 ]
 
 # App-specific params (App: drug response prediction)
-drp_preproc_params = [
+app_preproc_params = [
     {"name": "x_data_canc_files",
      "type": str,
      "help": "List of feature files.",
@@ -47,7 +47,7 @@ drp_preproc_params = [
     },
 ]
 
-preprocess_params = model_preproc_params + drp_preproc_params
+preprocess_params = model_preproc_params + app_preproc_params
 
 req_preprocess_args = [ll["name"] for ll in preprocess_params]
 
@@ -86,7 +86,7 @@ def run(params):
     :params: Dict params: A dictionary of CANDLE/IMPROVE keywords and parsed values.
     """
     params = frm.build_paths(params)
-    processed_outdir = frm.create_ml_data_outdir(params)
+    processed_outdir = frm.create_outdir(params['ml_data_outdir'])
     print("\nLoading omics data...")
     oo = drp.OmicsLoader(params)
     print(oo)
@@ -104,8 +104,10 @@ def run(params):
     print("\nLoading drugs data...")
     dd = drp.DrugsLoader(params)
     print(dd)
+    dr = dd.dfs['drug_ecfp4_nbits512.tsv']
 
     ge.to_csv(processed_outdir/'cancer_ge_kegg.csv', index=False)
+    dr.to_csv(processed_outdir/'drug_ecfp4_nbits512.csv')
 
     stages = {"train": params["train_split_file"],
               "val": params["val_split_file"],
@@ -120,7 +122,7 @@ def run(params):
 
         df_y = df_y[[params["drug_col_name"], params["canc_col_name"], params["y_col_name"]]]
 
-        data_fname = frm.build_ml_data_name(params, stage, data_format=None)
+        data_fname = frm.build_ml_data_name(params, stage)
 
         y_data_fname = f"{stage}_{params['y_data_suffix']}.csv"
         df_y.to_csv(processed_outdir / y_data_fname, index=False)
