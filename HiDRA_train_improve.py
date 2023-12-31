@@ -7,9 +7,8 @@ import argparse
 import json
 from improve import framework as frm
 from improve.metrics import compute_metrics
-import candle
-from candle import CandleCkptPyTorch
-from HiDRA_preprocess_improve import model_preproc_params, app_preproc_params, preprocess_params
+#import candle
+from HiDRA_preprocess_improve import preprocess_params
 
 # Import keras modules
 import tensorflow as tf
@@ -18,28 +17,42 @@ from tensorflow.keras.models import Model, Sequential, load_model
 from tensorflow.keras.layers import Input, Dense, Dropout, BatchNormalization
 from tensorflow.keras.layers import concatenate, multiply, dot, Activation
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.model_selection import KFold, train_test_split
 
 file_path = os.path.dirname(os.path.realpath(__file__))
-
-#data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
 
 metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]
 
 app_train_params = []
 
-model_train_params = []
+model_train_params = [
+    {"name": "epochs",
+     "type": int,
+     "default": 20,
+     "help": "Number of epochs for training."
+    },
 
-additional_definitions = []
+    {"name": "learning_rate",
+     "type": float,
+     "default": 0.001,
+     "help": "Learning rate for the optimizer."
+    },
 
-required = [
-    'epochs',
-    'batch_size',
-    'optimizer',
-    'loss',
-    'output_dir'
+    {"name": "batch_size",
+     "type": int,
+     "default": 1024,
+     "help": "Training batch size."
+    },
+
+    {"name": "loss",
+     "type": str,
+     "default": "mse",
+     "help": "Learning rate for the optimizer."
+    },
 ]
+
+train_params = app_train_params + model_train_params
 
 
 def parse_data(ic50, expr, GeneSet_Dic, drugs):
@@ -148,28 +161,22 @@ def root_mean_squared_error(y_true, y_pred):
 
 
 def run(params):
-    # [Req] Create output dir for the model.
     frm.create_outdir(outdir=params["model_outdir"])
     modelpath = frm.build_model_path(params, model_dir=params["model_outdir"])
 
-    # [Req] Create data names for train and val
-#    train_data_fname = frm.build_ml_data_name(params, stage="train")
-#    val_data_fname = frm.build_ml_data_name(params, stage="val")
-#    train_data_fname = train_data_fname.split(params["data_format"])[0]
-#    val_data_fname = val_data_fname.split(params["data_format"])[0]
+    train_data_fname = frm.build_ml_data_name(params, stage="train")
+    val_data_fname = frm.build_ml_data_name(params, stage="val")
 
     # [Req] Set checkpointing
     if params["ckpt_directory"] is None:
         params["ckpt_directory"] = params["model_outdir"]
 
-#    ckpt_obj, initial_epoch = config_checkpointing(params, model, optimizer)
-
     # Train
     batch_size = params['batch_size']
     epochs = params['epochs']
-    optimizer = params['optimizer']
     loss = params['loss']
     output_dir = params['output_dir']
+    lr = params['learning_rate']
 
     expr = pd.read_csv(params['ml_data_outdir'] + '/cancer_ge_kegg.csv', index_col=0)
     GeneSet_Dic = json.load(open(params['ml_data_outdir'] + '/geneset.json', 'r'))
@@ -186,7 +193,11 @@ def run(params):
     model_saver = ModelCheckpoint(output_dir + '/model.h5', monitor='val_loss',
                                   save_best_only=True, save_weights_only=False)
 
-    callbacks = [model_saver]
+    model_stopper = EarlyStopping(monitor='val_loss', restore_best_weights=True,
+                                  patience=10)
+
+    callbacks = [model_saver, model_stopper]
+    optimizer = Adam(learning_rate=lr)
 
     model = Making_Model(GeneSet_Dic)
     model.compile(loss=loss, optimizer=optimizer)
@@ -195,16 +206,16 @@ def run(params):
                      validation_data=(val_input,val_label),
                      callbacks=callbacks)
 
-    val_pred = model.predict(val_input)
     model.save(params["model_outdir"] + '/model.hdf5')
+#    model = tf.keras.models.load_model(params["model_outdir"] + '/model.hdf5')
+    val_pred = model.predict(val_input).flatten()
+    val_label = val_label.to_numpy().flatten()
 
-    # [Req] Save raw predictions in dataframe
     frm.store_predictions_df(
         params, y_true=val_label, y_pred=val_pred, stage="val",
         outdir=params["model_outdir"]
     )
 
-    # [Req] Compute performance scores
     val_scores = frm.compute_performace_scores(
         params, y_true=val_label, y_pred=val_pred, stage="val",
         outdir=params["model_outdir"], metrics=metrics_list
@@ -218,9 +229,7 @@ def run(params):
 
 
 def main(args):
-    additional_definitions = model_preproc_params + \
-                             model_train_params + \
-                             app_train_params
+    additional_definitions = preprocess_params + train_params
     params = frm.initialize_parameters(
         file_path,
         default_model="improve_hidra_default_model.txt",

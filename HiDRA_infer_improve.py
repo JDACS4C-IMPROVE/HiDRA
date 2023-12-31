@@ -5,8 +5,8 @@ import os
 import sys
 import argparse
 import json
-import candle
 from improve import framework as frm
+from improve.metrics import compute_metrics
 
 # Import keras modules
 import tensorflow as tf
@@ -17,17 +17,14 @@ from tensorflow.keras.layers import concatenate, multiply, dot, Activation
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import KFold, train_test_split
+from HiDRA_preprocess_improve import preprocess_params
+from HiDRA_train_improve import metrics_list, train_params
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 
-from HiDRA_train_improve import (
-    metrics_list,
-    model_preproc_params,
-    model_train_params,
-)
-
 app_infer_params = []
 model_infer_params = []
+infer_params = app_infer_params + model_infer_params
 
 
 def parse_data(ic50, expr, GeneSet_Dic, drugs):
@@ -46,28 +43,25 @@ def parse_data(ic50, expr, GeneSet_Dic, drugs):
 def run(params):
     frm.create_outdir(outdir=params["infer_outdir"])
     test_data_fname = frm.build_ml_data_name(params, stage="test")
-#    test_data_fname = test_data_fname.split(params["data_format"])[0]
 
     expr = pd.read_csv(params['ml_data_outdir'] + '/cancer_ge_kegg.csv', index_col=0)
     GeneSet_Dic = json.load(open(params['ml_data_outdir'] + '/geneset.json', 'r'))
     drugs = pd.read_csv(params['ml_data_outdir'] + '/drug_ecfp4_nbits512.csv', index_col=0)
 
-    # Training
     auc_test = pd.read_csv(params['ml_data_outdir'] + '/test_y_data.csv', index_col=0)
     test_label = auc_test[params['y_col_name']]
     test_input = parse_data(auc_test, expr, GeneSet_Dic, drugs)
 
     model = load_model(params["model_outdir"] + '/model.hdf5')
 
-    test_pred = model.predict(test_input)
+    test_label = test_label.to_numpy().flatten()
+    test_pred = model.predict(test_input).flatten()
 
-    # [Req] Save raw predictions in dataframe
     frm.store_predictions_df(
         params, y_true=test_label, y_pred=test_pred, stage="test",
         outdir=params["infer_outdir"]
     )
 
-    # [Req] Compute performance scores
     test_scores = frm.compute_performace_scores(
         params, y_true=test_label, y_pred=test_pred, stage="test",
         outdir=params["infer_outdir"], metrics=metrics_list
@@ -77,11 +71,7 @@ def run(params):
 
 
 def main(args):
-    additional_definitions = model_preproc_params + \
-                             model_train_params + \
-                             model_infer_params + \
-                             app_infer_params
-
+    additional_definitions = preprocess_params + train_params + infer_params
     params = frm.initialize_parameters(
         file_path,
         default_model="improve_hidra_default_model.txt",

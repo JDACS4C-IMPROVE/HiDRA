@@ -4,7 +4,6 @@ import os
 import json
 import argparse
 from scipy.stats import zscore
-import candle
 import sys
 from pathlib import Path
 from improve import framework as frm
@@ -49,10 +48,6 @@ app_preproc_params = [
 
 preprocess_params = model_preproc_params + app_preproc_params
 
-req_preprocess_args = [ll["name"] for ll in preprocess_params]
-
-req_preprocess_args.extend(["y_col_name", "model_outdir"])
-
 
 def gene_selection(df, genes_fpath, canc_col_name):
     """
@@ -89,7 +84,7 @@ def run(params):
     processed_outdir = frm.create_outdir(params['ml_data_outdir'])
     print("\nLoading omics data...")
     oo = drp.OmicsLoader(params)
-    print(oo)
+
     ge = oo.dfs['cancer_gene_expression.tsv']
 
     genes_fpath = params["kegg_pathway_file"]
@@ -103,7 +98,7 @@ def run(params):
 
     print("\nLoading drugs data...")
     dd = drp.DrugsLoader(params)
-    print(dd)
+
     dr = dd.dfs['drug_ecfp4_nbits512.tsv']
 
     ge.to_csv(processed_outdir/'cancer_ge_kegg.csv', index=False)
@@ -131,11 +126,12 @@ def run(params):
 
 
 def main():
+    additional_definitions = preprocess_params
     params = frm.initialize_parameters(
         filepath,
         default_model="improve_hidra_default_model.txt",
-        additional_definitions=preprocess_params,
-        required=req_preprocess_args,
+        additional_definitions=additional_definitions,
+        required=None,
     )
     processed_outdir = run(params)
     print("\nFinished HiDRA pre-processing.")
