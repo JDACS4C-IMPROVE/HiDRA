@@ -19,8 +19,9 @@ from tensorflow.keras.layers import concatenate, multiply, dot, Activation
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.model_selection import KFold, train_test_split
+from pathlib import Path
 
-file_path = os.path.dirname(os.path.realpath(__file__))
+filepath = Path(__file__).resolve().parent
 
 metrics_list = ["mse", "rmse", "pcc", "scc", "r2"]
 
@@ -164,9 +165,6 @@ def run(params):
     frm.create_outdir(outdir=params["model_outdir"])
     modelpath = frm.build_model_path(params, model_dir=params["model_outdir"])
 
-    train_data_fname = frm.build_ml_data_name(params, stage="train")
-    val_data_fname = frm.build_ml_data_name(params, stage="val")
-
     # [Req] Set checkpointing
     if params["ckpt_directory"] is None:
         params["ckpt_directory"] = params["model_outdir"]
@@ -175,26 +173,27 @@ def run(params):
     batch_size = params['batch_size']
     epochs = params['epochs']
     loss = params['loss']
-    output_dir = params['output_dir']
     lr = params['learning_rate']
+    model_outdir = params["model_outdir"]
 
-    expr = pd.read_csv(params['ml_data_outdir'] + '/cancer_ge_kegg.csv', index_col=0)
-    GeneSet_Dic = json.load(open(params['ml_data_outdir'] + '/geneset.json', 'r'))
-    drugs = pd.read_csv(params['ml_data_outdir'] + '/drug_ecfp4_nbits512.csv', index_col=0)
+    expr = pd.read_csv(params['train_ml_data_dir'] + '/cancer_ge_kegg.csv', index_col=0)
+    GeneSet_Dic = json.load(open(params['train_ml_data_dir'] + '/geneset.json', 'r'))
+    drugs = pd.read_csv(params['train_ml_data_dir'] + '/drug_ecfp4_nbits512.csv', index_col=0)
 
     # Training
-    auc_tr = pd.read_csv(params['ml_data_outdir'] + '/train_y_data.csv', index_col=0)
-    auc_val = pd.read_csv(params['ml_data_outdir'] + '/val_y_data.csv', index_col=0)
+    auc_tr = pd.read_csv(params["train_ml_data_dir"] + '/train_y_data.csv', index_col=0)
+    auc_val = pd.read_csv(params["val_ml_data_dir"] + '/val_y_data.csv', index_col=0)
+
     train_label = auc_tr[params['y_col_name']]
     val_label = auc_val[params['y_col_name']]
     train_input = parse_data(auc_tr, expr, GeneSet_Dic, drugs)
     val_input = parse_data(auc_val, expr, GeneSet_Dic, drugs)
 
-    model_saver = ModelCheckpoint(output_dir + '/model.h5', monitor='val_loss',
+    model_saver = ModelCheckpoint(model_outdir + '/model.h5', monitor='val_loss',
                                   save_best_only=True, save_weights_only=False)
 
     model_stopper = EarlyStopping(monitor='val_loss', restore_best_weights=True,
-                                  patience=10)
+                                  patience=params['patience'])
 
     callbacks = [model_saver, model_stopper]
     optimizer = Adam(learning_rate=lr)
@@ -206,10 +205,15 @@ def run(params):
                      validation_data=(val_input,val_label),
                      callbacks=callbacks)
 
-    model.save(params["model_outdir"] + '/model.hdf5')
+    model.save(model_outdir + '/model.hdf5')
 #    model = tf.keras.models.load_model(params["model_outdir"] + '/model.hdf5')
     val_pred = model.predict(val_input).flatten()
     val_label = val_label.to_numpy().flatten()
+
+#    print(params['ml_data_outdir'] + '/val_y_data.csv')
+#    print(auc_val)
+#    print(val_pred.shape)
+#    print(val_label.shape)
 
     frm.store_predictions_df(
         params, y_true=val_label, y_pred=val_pred, stage="val",
@@ -231,7 +235,7 @@ def run(params):
 def main(args):
     additional_definitions = preprocess_params + train_params
     params = frm.initialize_parameters(
-        file_path,
+        filepath,
         default_model="improve_hidra_default_model.txt",
         additional_definitions=additional_definitions,
         required=None,

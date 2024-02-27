@@ -6,17 +6,18 @@ ml_data_outdir = "./ml_data"
 x_data_canc_files = [["cancer_gene_expression.tsv", ["Gene_Symbol"]]]
 x_data_drug_files = [["drug_ecfp4_nbits512.tsv"]]
 y_data_files = [["response.tsv"]]
-train_split_file = "GDSCv1_split_4_train.txt"
-val_split_file = "GDSCv1_split_4_val.txt"
-test_split_file = "CTRPv2_all.txt"
+train_split_file = "CCLE_split_0_train.txt"
+val_split_file = "CCLE_split_0_val.txt"
+test_split_file = "gCSI_all.txt"
 kegg_pathway_file = "csa_data/raw_data/geneset.gmt"
 
 [Train]
-epochs=20
-batch_size=1024
+epochs=2
+batch_size=32
 learning_rate = 0.001
+patience = 10
 loss='mse'
-model_outdir='./ml_data'
+model_outdir='auc/models/CCLE/split_1'
 
 [Infer]
 infer_outdir='./ml_data'
