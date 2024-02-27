@@ -11,6 +11,7 @@ from improve import drug_resp_pred as drp
 
 
 filepath = Path(__file__).resolve().parent
+improve_data_dir = os.environ["IMPROVE_DATA_DIR"].rstrip('/')
 
 # Model-specific params
 model_preproc_params = [
@@ -87,7 +88,7 @@ def run(params):
 
     ge = oo.dfs['cancer_gene_expression.tsv']
 
-    genes_fpath = params["kegg_pathway_file"]
+    genes_fpath = improve_data_dir + '/' + params["kegg_pathway_file"]
     ge, GeneSet_Dic = gene_selection(ge, genes_fpath, canc_col_name=params["canc_col_name"])
 
     json.dump(GeneSet_Dic, open(processed_outdir/'geneset.json', 'w'))
