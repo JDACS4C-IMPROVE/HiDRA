@@ -77,7 +77,7 @@ def gene_selection(df, genes_fpath, canc_col_name):
 
 
 def run(params):
-    """ Execute data pre-processing for GraphDRP model.
+    """ Execute data pre-processing for HiDRA.
 
     :params: Dict params: A dictionary of CANDLE/IMPROVE keywords and parsed values.
     """
@@ -94,8 +94,10 @@ def run(params):
     json.dump(GeneSet_Dic, open(processed_outdir/'geneset.json', 'w'))
 
     # Check that z-score is on the correct axis
+    print(ge)
+
     numeric_cols = ge.select_dtypes(include=[np.number]).columns
-    ge[numeric_cols] = ge[numeric_cols].apply(zscore)
+    ge[numeric_cols] = ge[numeric_cols].apply(zscore, axis=1)
 
     print("\nLoading drugs data...")
     dd = drp.DrugsLoader(params)
@@ -111,7 +113,7 @@ def run(params):
 
     for stage, split_file in stages.items():
         rr = drp.DrugResponseLoader(params, split_file=split_file, verbose=True)
-        df_response = rr.dfs["response.tsv"]
+        df_response = rr.dfs[params['y_data_files'][0][0]]
 
         df_y, df_canc = drp.get_common_samples(df1=df_response, df2=ge,
                                                ref_col=params["canc_col_name"])
