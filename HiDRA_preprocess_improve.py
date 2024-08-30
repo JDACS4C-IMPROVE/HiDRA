@@ -94,8 +94,6 @@ def run(params):
     json.dump(GeneSet_Dic, open(processed_outdir/'geneset.json', 'w'))
 
     # Check that z-score is on the correct axis
-    print(ge)
-
     numeric_cols = ge.select_dtypes(include=[np.number]).columns
     ge[numeric_cols] = ge[numeric_cols].apply(zscore, axis=1)
 
