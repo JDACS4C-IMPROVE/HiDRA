@@ -16,8 +16,8 @@ output_dir = hidra_test_ml
 [Train]
 model_file_name = model
 model_file_format = .h5
-epochs = 5
-batch_size = 16
+epochs = 20
+batch_size = 32
 learning_rate = 0.001
 patience = 10
 loss = mse

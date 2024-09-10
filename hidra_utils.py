@@ -227,6 +227,5 @@ class MultiGenerator(Sequence):
         d_g = DataGenerator(self.drugs, genes, self.labels, indexes, self.batch_size, self.y_col, drugs=True)
         X_gen, y = d_g.__getitem__()
         X.append(X_gen)
-        print(d_g.__len__())
 
         return X
