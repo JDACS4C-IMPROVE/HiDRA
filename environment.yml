@@ -1,4 +1,4 @@
-name: hidra
+name: hidra_test
 
 channels:
   - defaults
@@ -10,6 +10,4 @@ dependencies:
   - scikit-learn=1.3.0
   - pandas=2.1.4
   - openpyxl=3.0.10
-  - pip
-  - pip:
-    - git+https://github.com/ECP-CANDLE/candle_lib@develop
+  - pyyaml=6.0.1

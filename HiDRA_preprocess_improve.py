@@ -1,142 +1,110 @@
 import numpy as np
 import pandas as pd
-import os
-import json
-import argparse
-from scipy.stats import zscore
 import sys
+import json
+from scipy.stats import zscore
 from pathlib import Path
-from improve import framework as frm
-from improve import drug_resp_pred as drp
+from typing import Dict
+
+# Core improvelib imports
+from improvelib.applications.drug_response_prediction.config import DRPPreprocessConfig
+from improvelib.utils import str2bool
+import improvelib.utils as frm
+
+# Application-specific (DRP) imports
+import improvelib.applications.drug_response_prediction.drug_utils as drugs_utils
+import improvelib.applications.drug_response_prediction.omics_utils as omics_utils
+import improvelib.applications.drug_response_prediction.drp_utils as drp
+
+# Model-specifc imports
+from model_params_def import preprocess_params
+from hidra_utils import *
 
 
 filepath = Path(__file__).resolve().parent
-improve_data_dir = os.environ["IMPROVE_DATA_DIR"].rstrip('/')
-
-# Model-specific params
-model_preproc_params = [
-    {"name": "kegg_pathway_file",
-     "type": str,
-     "help": "KEGG file of pathways and genes",
-    },
-]
-
-# App-specific params (App: drug response prediction)
-app_preproc_params = [
-    {"name": "x_data_canc_files",
-     "type": str,
-     "help": "List of feature files.",
-    },
-    {"name": "x_data_drug_files",
-     "type": str,
-     "help": "List of feature files.",
-    },
-    {"name": "y_data_files",
-     "type": str,
-     "help": "List of output files.",
-    },
-    {"name": "canc_col_name",
-     "default": "improve_sample_id",
-     "type": str,
-     "help": "Column name that contains the cancer sample ids.",
-    },
-    {"name": "drug_col_name",
-     "default": "improve_chem_id",
-     "type": str,
-     "help": "Column name that contains the drug ids.",
-    },
-]
-
-preprocess_params = model_preproc_params + app_preproc_params
 
 
-def gene_selection(df, genes_fpath, canc_col_name):
+def run(params: Dict):
+    """ Run data preprocessing.
+
+    Args:
+        params (dict): dict of IMPROVE parameters and parsed values.
+
+    Returns:
+        str: directory name that was used to save the preprocessed (generated)
+            ML data files.
     """
-    Read in a KEGG pathway list and keep only genes present in a pathway and
-    gene expression data
-    """
-    GeneSet = []
-    GeneSet_Dic = {}
-    df_genes = set([x for x in df.columns])
 
-    with open(genes_fpath) as f:
-        for line in f:
-            line = line.rstrip().split('\t')
-            pathway = line[0]
-
-            genes = [x for x in line[2:] if x in df_genes]
-            GeneSet.extend(genes)
-            GeneSet_Dic[pathway] = genes
-
-    GeneSet = set(GeneSet)
-    print(str(len(GeneSet)) + ' KEGG genes found in expression file.')
-    genes = drp.common_elements(GeneSet, df.columns[1:])
-    cols = [canc_col_name] + genes
-
-    return df[cols], GeneSet_Dic
-
-
-def run(params):
-    """ Execute data pre-processing for HiDRA.
-
-    :params: Dict params: A dictionary of CANDLE/IMPROVE keywords and parsed values.
-    """
-    params = frm.build_paths(params)
-    processed_outdir = frm.create_outdir(params['ml_data_outdir'])
     print("\nLoading omics data...")
-    oo = drp.OmicsLoader(params)
+    omics_obj = omics_utils.OmicsLoader(params)
+    ge = omics_obj.dfs['cancer_gene_expression.tsv']
 
-    ge = oo.dfs['cancer_gene_expression.tsv']
-
-    genes_fpath = improve_data_dir + '/' + params["kegg_pathway_file"]
+    genes_fpath = params["input_dir"] + '/' + params["kegg_pathway_file"]
     ge, GeneSet_Dic = gene_selection(ge, genes_fpath, canc_col_name=params["canc_col_name"])
 
-    json.dump(GeneSet_Dic, open(processed_outdir/'geneset.json', 'w'))
+    json.dump(GeneSet_Dic, open(params['output_dir'] + '/geneset.json', 'w'))
 
     # Check that z-score is on the correct axis
     numeric_cols = ge.select_dtypes(include=[np.number]).columns
     ge[numeric_cols] = ge[numeric_cols].apply(zscore, axis=1)
 
     print("\nLoading drugs data...")
-    dd = drp.DrugsLoader(params)
+    drugs_obj = drugs_utils.DrugsLoader(params)
+    mf = drugs_obj.dfs['drug_ecfp4_nbits512.tsv']
+    mf = mf.reset_index()
 
-    dr = dd.dfs['drug_ecfp4_nbits512.tsv']
-
-    ge.to_csv(processed_outdir/'cancer_ge_kegg.csv', index=False)
-    dr.to_csv(processed_outdir/'drug_ecfp4_nbits512.csv')
+    ge.to_csv(params["output_dir"] + '/cancer_ge_kegg.csv', index=False)
+    mf.to_csv(params["output_dir"] + '/drug_ecfp4_nbits512.csv', index=False)
 
     stages = {"train": params["train_split_file"],
               "val": params["val_split_file"],
               "test": params["test_split_file"]}
 
     for stage, split_file in stages.items():
-        rr = drp.DrugResponseLoader(params, split_file=split_file, verbose=True)
-        df_response = rr.dfs[params['y_data_files'][0][0]]
+        rsp = drp.DrugResponseLoader(params,
+                                     split_file=split_file,
+                                     verbose=False).dfs["response.tsv"]
 
-        df_y, df_canc = drp.get_common_samples(df1=df_response, df2=ge,
-                                               ref_col=params["canc_col_name"])
+#        rsp = rsp.merge(ge[params["canc_col_name"]], on=params["canc_col_name"], how="inner")
+#        rsp = rsp.merge(mf[params["drug_col_name"]], on=params["drug_col_name"], how="inner")
+#        ge_sub = ge[ge[params["canc_col_name"]].isin(rsp[params["canc_col_name"]])].reset_index(drop=True)
+#        mf_sub = mf[mf[params["drug_col_name"]].isin(rsp[params["drug_col_name"]])].reset_index(drop=True)
 
-        df_y = df_y[[params["drug_col_name"], params["canc_col_name"], params["y_col_name"]]]
+        data_fname = frm.build_ml_data_file_name(data_format=params["data_format"], stage=stage)
 
-        data_fname = frm.build_ml_data_name(params, stage)
+#        print("Merge data")
+#        data = rsp.merge(ge_sc, on=params["canc_col_name"], how="inner")
+#        data = data.merge(md_sc, on=params["drug_col_name"], how="inner")
+#        data = data.sample(frac=1.0).reset_index(drop=True) # shuffle
 
-        y_data_fname = f"{stage}_{params['y_data_suffix']}.csv"
-        df_y.to_csv(processed_outdir / y_data_fname, index=False)
+        print("Save data")
+#        data = data.drop(columns=["study"]) # to_parquet() throws error since "study" contain mixed values
+#        data.to_parquet(Path(params["output_dir"]) / data_fname) # saves ML data file to parquet
 
-    return processed_outdir
+        # Prepare the y dataframe for the current stage
+#        fea_list = ["ge", "mordred"]
+#        fea_cols = [c for c in data.columns if (c.split(fea_sep)[0]) in fea_list]
+#        meta_cols = [c for c in data.columns if (c.split(fea_sep)[0]) not in fea_list]
+#        ydf = data[meta_cols]
+        ydf = rsp
+
+        # [Req] Save y dataframe for the current stage
+        frm.save_stage_ydf(ydf, stage, params["output_dir"])
+
+    return params["output_dir"]
 
 
-def main():
+def main(args):
     additional_definitions = preprocess_params
-    params = frm.initialize_parameters(
-        filepath,
-        default_model="improve_hidra_default_model.txt",
+    cfg = DRPPreprocessConfig()
+    params = cfg.initialize_parameters(
+        pathToModelDir=filepath,
+        default_config="hidra_params.txt",
         additional_definitions=additional_definitions,
-        required=None,
     )
-    processed_outdir = run(params)
+    ml_data_outdir = run(params)
     print("\nFinished HiDRA pre-processing.")
 
 
 if __name__=="__main__":
-    main()
+    main(sys.argv[1:])

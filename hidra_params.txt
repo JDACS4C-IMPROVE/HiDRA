@@ -1,0 +1,35 @@
+[Global_Params]
+model_name = hidra
+
+[Preprocess]
+train_split_file = CCLE_split_0_train.txt
+val_split_file = CCLE_split_0_val.txt
+test_split_file = CCLE_split_0_test.txt
+x_data_canc_files = [["cancer_gene_expression.tsv", ["Gene_Symbol"]]]
+x_data_drug_files = [["drug_ecfp4_nbits512.tsv"]]
+y_data_files = [["response.tsv"]]
+kegg_pathway_file = geneset.gmt
+data_format = .csv
+input_dir = csa_data/raw_data
+output_dir = hidra_test_ml
+
+[Train]
+model_file_name = model
+model_file_format = .h5
+epochs = 5
+batch_size = 16
+learning_rate = 0.001
+patience = 10
+loss = mse
+data_format = .csv
+input_dir = hidra_test_ml
+output_dir = hidra_test_ml
+
+[Infer]
+model_file_name = model
+model_file_format = .h5
+data_format = .csv
+input_data_dir = hidra_test_ml
+input_model_dir = hidra_test_ml
+output_dir = hidra_test_ml
+calc_infer_scores = True
