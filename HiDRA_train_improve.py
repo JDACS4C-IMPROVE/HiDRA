@@ -93,19 +93,13 @@ def run(params: Dict):
     return val_scores
 
 
-def initialize_parameters():
+def main(args):
     additional_definitions = train_params
     cfg = DRPTrainConfig()
     params = cfg.initialize_parameters(
         pathToModelDir=filepath,
         default_config="hidra_params.txt",
         additional_definitions=additional_definitions)
-
-    return params
-
-
-def main(args):
-    params = initialize_parameters()
     val_scores = run(params)
     print("\nFinished training HiDRA model.")
 
