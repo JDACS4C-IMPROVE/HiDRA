@@ -70,7 +70,6 @@ csa_data/raw_data/
 ```
 git clone git@github.com:JDACS4C-IMPROVE/HiDRA.git
 cd HiDRA
-git checkout develop
 ```
 
 ### 2. Set computational environment

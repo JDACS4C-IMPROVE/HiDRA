@@ -1,4 +1,4 @@
-name: hidra_test
+name: hidra
 
 channels:
   - defaults
