@@ -78,7 +78,8 @@ def run(params: Dict):
 
     frm.store_predictions_df(
         y_true=val_label, y_pred=val_pred, stage="val",
-        y_col_name=params["y_col_name"], output_dir=params["output_dir"]
+        y_col_name=params["y_col_name"], output_dir=params["output_dir"],
+        input_dir=params["input_dir"]
     )
 
     val_scores = frm.compute_performance_scores(

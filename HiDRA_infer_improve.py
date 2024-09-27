@@ -39,7 +39,8 @@ def run(params):
     frm.store_predictions_df(
         y_true=test_label, y_pred=test_pred, stage="test",
         y_col_name=params["y_col_name"],
-        output_dir=params["output_dir"]
+        output_dir=params["output_dir"],
+        input_dir=params["input_data_dir"]
     )
 
     print(params["calc_infer_scores"])

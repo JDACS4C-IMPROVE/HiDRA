@@ -25,12 +25,12 @@ export IMPROVE_DATA_DIR="./$data_dir/"
 # Clone IMPROVE lib (if needed)
 pushd ../
 improve_lib_path=$PWD/IMPROVE
-improve_branch="v0.0.3-beta"
+improve_branch="v0.1.0-2024-09-27"
 if [ -d $improve_lib_path ]; then
   echo "IMPROVE repo exists in ${improve_lib_path}"
 else
     # git clone https://github.com/JDACS4C-IMPROVE/IMPROVE
-    git clone -b $improve_branch https://github.com/JDACS4C-IMPROVE/IMPROVE
+    git clone -f $improve_branch https://github.com/JDACS4C-IMPROVE/IMPROVE
 fi
 pushd $model_name
 
