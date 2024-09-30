@@ -29,9 +29,13 @@ improve_branch="v0.1.0-2024-09-27"
 if [ -d $improve_lib_path ]; then
   echo "IMPROVE repo exists in ${improve_lib_path}"
 else
-    # git clone https://github.com/JDACS4C-IMPROVE/IMPROVE
-    git clone -f $improve_branch https://github.com/JDACS4C-IMPROVE/IMPROVE
+    git clone https://github.com/JDACS4C-IMPROVE/IMPROVE
 fi
+
+cd IMPROVE/
+git checkout -f $improve_branch
+cd ../
+
 pushd $model_name
 
 # Env var PYTHOPATH
