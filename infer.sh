@@ -1,39 +1,58 @@
-#!/bin/bash
+### Path to your CANDLEized model's main Python script ###
+# CANDLE_MODEL=/usr/local/GraphDRP/graphdrp_baseline_pytorch.py
+CANDLE_MODEL=HiDRA_infer_improve.py
+# CANDLE_MODEL=frm_infer_candle.py  # TODO: change this var name!
 
-# arg 1 CUDA_VISIBLE_DEVICES
-# arg 2 CANDLE_DATA_DIR
-# arg 3 CANDLE_CONFIG
+# Path to directory containing model executable
+# ??
+IMPROVE_MODEL_DIR=${IMPROVE_MODEL_DIR:-$( dirname -- "$0" )}
 
-export CUDA_VISIBLE_DEVICES=$1
-export CANDLE_DATA_DIR=$2
-export CANDLE_CONFIG=$3
-
-# Check if path to model directory is set otherwise assume this scriot is in top level of model dir
-if [ -z $MODEL_DIR ]
-then
-        MODEL_DIR=$( dirname -- "$0"; )
+# Check if executable exists
+CANDLE_MODEL=${IMPROVE_MODEL_DIR}/${CANDLE_MODEL}
+if [ ! -f ${CANDLE_MODEL} ] ; then
+	echo No such file ${CANDLE_MODEL}
+	exit 404
 fi
 
-# Check if directory exists
-if ! [ -d $MODEL_DIR ]
-then
-        echo No directory $MODEL_DIR
-        exit 404
+if [ $# -lt 2 ] ; then
+        echo "Illegal number of parameters"
+        echo "CUDA_VISIBLE_DEVICES and CANDLE_DATA_DIR are required"
+        exit -1
 fi
 
-if ! [ -d $CANDLE_DATA_DIR && -w $CANDLE_DATA_DIR ]
-then
-        echo No directory $CANDLE_DATA_DIR or not writable
-        exit 404
+if [ $# -eq 2 ] ; then
+        CUDA_VISIBLE_DEVICES=$1 ; shift
+        CANDLE_DATA_DIR=$1 ; shift
+        CMD="python ${CANDLE_MODEL}"
+        echo "CMD = $CMD"
+
+elif [ $# -ge 3 ] ; then
+        CUDA_VISIBLE_DEVICES=$1 ; shift
+        CANDLE_DATA_DIR=$1 ; shift
+
+        # if original $3 is a file, set candle_config and passthrough $@
+        ### if [ -f $CANDLE_DATA_DIR/$1 ] ; then
+        if [ -f $1 ] ; then
+		echo "$CANDLE_DATA_DIR/$1 is a file"
+                CANDLE_CONFIG=$1 ; shift
+                CMD="python ${CANDLE_MODEL} --config_file $CANDLE_CONFIG $@"
+                echo "CMD = $CMD $@"
+
+        # else passthrough $@
+        else
+		echo "$1 is not a file"
+                CMD="python ${CANDLE_MODEL} $@"
+                echo "CMD = $CMD"
+
+        fi
 fi
 
 
+# Display runtime arguments
+echo "using CUDA_VISIBLE_DEVICES ${CUDA_VISIBLE_DEVICES}"
+echo "using CANDLE_DATA_DIR ${CANDLE_DATA_DIR}"
+echo "using CANDLE_CONFIG ${CANDLE_CONFIG}"
 
-
-
-# Change into directory and execute tests
-cd ${MODEL_DIR}
-python HiDRA_predict.py
-
-# Check if successful 
-exit 0
+# Set up environmental variables and execute model
+echo "running command ${CMD}"
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} IMPROVE_DATA_DIR=${CANDLE_DATA_DIR} CANDLE_DATA_DIR=${CANDLE_DATA_DIR} $CMD
