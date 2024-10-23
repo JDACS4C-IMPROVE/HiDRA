@@ -27,7 +27,7 @@ def gene_selection(df, genes_fpath, canc_col_name):
     GeneSet = set(GeneSet)
     print(str(len(GeneSet)) + ' KEGG genes found in expression file.')
     genes = GeneSet.intersection(df.columns[1:])
-    cols = [canc_col_name] + list(genes)
+    cols = [canc_col_name] + sorted(list(genes))
 
     return df[cols], GeneSet_Dic
 
