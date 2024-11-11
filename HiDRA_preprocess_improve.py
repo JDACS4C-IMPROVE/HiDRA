@@ -39,7 +39,7 @@ def run(params: Dict):
     omics_obj = omics_utils.OmicsLoader(params)
     ge = omics_obj.dfs['cancer_gene_expression.tsv']
 
-    genes_fpath = params["input_dir"] + '/' + params["kegg_pathway_file"]
+    genes_fpath = params["input_supp_data_dir"] + '/geneset.gmt'
     ge, GeneSet_Dic = gene_selection(ge, genes_fpath, canc_col_name=params["canc_col_name"])
 
     json.dump(GeneSet_Dic, open(params['output_dir'] + '/geneset.json', 'w'))

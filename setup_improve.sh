@@ -19,6 +19,16 @@ else
     echo "CSA data folder already exists"
 fi
 
+# Download author data
+author_dir="author_data"
+if [ ! -d $PWD/$author_dir/ ]; then
+    echo "Download author data"
+    mkdir author_data
+    source download_author_data.sh author_data/
+else
+    echo "Author data folder already exists"
+fi
+
 # Env var IMPROVE_DATA_DIR
 export IMPROVE_DATA_DIR="./$data_dir/"
 
