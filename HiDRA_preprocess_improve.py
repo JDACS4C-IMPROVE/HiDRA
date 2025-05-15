@@ -38,7 +38,7 @@ def run(params: Dict):
                                         benchmark_dir = params['input_dir'], 
                                         column_name = params['canc_col_name'])
     ge = ge.reset_index()
-    genes_fpath = filepath + '/raw_data/geneset.gmt'
+    genes_fpath = str(filepath) + '/raw_data/geneset.gmt'
     ge, GeneSet_Dic = gene_selection(ge, genes_fpath, canc_col_name=params["canc_col_name"])
 
     json.dump(GeneSet_Dic, open(params['output_dir'] + '/geneset.json', 'w'))
