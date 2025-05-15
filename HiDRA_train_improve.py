@@ -95,13 +95,15 @@ def run(params: Dict):
 
 
 def main(args):
-    additional_definitions = train_params
     cfg = DRPTrainConfig()
-    params = cfg.initialize_parameters(
-        pathToModelDir=filepath,
-        default_config="hidra_params.txt",
-        additional_definitions=additional_definitions)
+    params = cfg.initialize_parameters(pathToModelDir=filepath,
+                                       default_config="HiDRA_params.ini",
+                                       additional_definitions=train_params)
+    timer_train = frm.Timer()
     val_scores = run(params)
+    timer_train.save_timer(dir_to_save=params["output_dir"], 
+                           filename='runtime_train.json', 
+                           extra_dict={"stage": "train"})
     print("\nFinished training HiDRA model.")
 
 
