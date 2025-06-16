@@ -1,8 +1,8 @@
 # HiDRA
 
-This repository demonstrates how to use the [IMPROVE library v0.1.0-2024-09-27](https://jdacs4c-improve.github.io/docs/) for building a drug response prediction (DRP) model using HiDRA (Hierarchical Network for Drug Response Prediction with Attention), and provides examples with the benchmark [cross-study analysis (CSA) dataset](https://web.cels.anl.gov/projects/IMPROVE_FTP/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/).
+This repository demonstrates how to use the [IMPROVE library v0.1.0](https://jdacs4c-improve.github.io/docs/v0.1.0) for building a drug response prediction (DRP) model using HiDRA (Hierarchical Network for Drug Response Prediction with Attention), and provides examples with the benchmark [cross-study analysis (CSA) dataset](https://web.cels.anl.gov/projects/IMPROVE_FTP/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/).
 
-This version, tagged as `v0.1.0-2024-09-27`, , introduces a new API which is designed to encourage broader adoption of IMPROVE and its curated models by the research community.
+This version, tagged as `v0.1.0`, , introduces a new API which is designed to encourage broader adoption of IMPROVE and its curated models by the research community.
 
 
 ## Dependencies
@@ -15,7 +15,7 @@ ML framework:
 + [scikit-learn](https://github.com/scikit-learn/scikit-learn) - train/val/test split
 
 IMPROVE dependencies:
-+ [IMPROVE v0.1.0-2024-09-27](https://jdacs4c-improve.github.io/docs/)
++ [IMPROVE v0.1.0](https://jdacs4c-improve.github.io/docs/v0.1.0)
 
 
 ## Dataset
@@ -70,6 +70,7 @@ csa_data/raw_data/
 ```
 git clone git@github.com:JDACS4C-IMPROVE/HiDRA.git
 cd HiDRA
+git checkout v0.1.0
 ```
 
 ### 2. Set computational environment
