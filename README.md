@@ -60,7 +60,7 @@ csa_data/raw_data/
 + `HiDRA_train_improve.py` - trains the HiDRA DRP model
 + `HiDRA_infer_improve.py` - runs inference with the trained HiDRA model
 + `hidra_utils.py` - defines the structure of the model and creates data generators
-+ `hidra_params.txt` - default parameter file
++ `HiDRA_params.ini` - default parameter file
 
 
 
@@ -76,7 +76,7 @@ git checkout v0.1.0
 ### 2. Set computational environment
 Create conda env using yml file
 ```
-conda env create -f environment.yml 
+conda env create -f HiDRA_environment.yml 
 ```
 
 
