@@ -23,20 +23,10 @@ filepath = Path(__file__).resolve().parent
 
 
 def run(params: Dict):
-    """ Run data preprocessing.
-
-    Args:
-        params (dict): dict of IMPROVE parameters and parsed values.
-
-    Returns:
-        str: directory name that was used to save the preprocessed (generated)
-            ML data files.
-    """
-
     print("\nLoading omics data...")
-    ge = drp.get_x_data(file = params['cell_transcriptomic_file'], 
-                                        benchmark_dir = params['input_dir'], 
-                                        column_name = params['canc_col_name'])
+    ge = frm.get_x_data(file = params['cell_transcriptomic_file'], 
+                        benchmark_dir = params['input_dir'], 
+                        column_name = params['canc_col_name'])
     ge = ge.reset_index()
     genes_fpath = str(filepath) + '/raw_data/geneset.gmt'
     ge, GeneSet_Dic = gene_selection(ge, genes_fpath, canc_col_name=params["canc_col_name"])
@@ -48,7 +38,7 @@ def run(params: Dict):
     ge[numeric_cols] = ge[numeric_cols].apply(zscore, axis=1)
 
     print("\nLoading drugs data...")
-    mf = drp.get_x_data(file = params['drug_ecfp_file'], 
+    mf = frm.get_x_data(file = params['drug_ecfp_file'], 
                     benchmark_dir = params['input_dir'], 
                     column_name = params['drug_col_name'])
     mf = mf.reset_index()
@@ -61,9 +51,10 @@ def run(params: Dict):
               "test": params["test_split_file"]}
 
     for stage, split_file in stages.items():
-        rsp = drp.get_response_data(split_file=split_file, 
-                                    benchmark_dir=params['input_dir'], 
-                                    response_file=params['y_data_file'])
+        rsp = frm.get_y_data(split_file=split_file, 
+                             benchmark_dir=params['input_dir'], 
+                             y_data_file=params['y_data_file'])
+        rsp = rsp.dropna(subset=[params['y_col_name']])
 
         data_fname = frm.build_ml_data_file_name(data_format=params["data_format"], stage=stage)
         print("Save data")
