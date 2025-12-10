@@ -1,0 +1,21 @@
+[Global_Params]
+model_name = hidra
+
+[Preprocess]
+test_split_file = tcga_test_all.txt
+x_data_canc_files = [["cancer_gene_expression.tsv", ["Gene_Symbol"]]]
+x_data_drug_files = [["drug_ecfp4_nbits512.tsv"]]
+y_data_files = [["response_tcga.tsv"]]
+input_supp_data_dir = ./author_data
+data_format = .csv
+input_dir = csa_data/raw_data
+output_dir = hidra_test_ml
+
+[Infer]
+model_file_name = model
+model_file_format = .h5
+data_format = .csv
+input_data_dir = hidra_test_ml
+input_model_dir = hidra_test_ml
+output_dir = hidra_test_ml
+calc_infer_scores = False
