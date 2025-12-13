@@ -24,18 +24,30 @@ def run(params):
     auc_test = pd.read_csv(dir / 'tcga_test_y_data.csv', index_col=0)
     auc_test = auc_test[auc_test['improve_chem_id'].isin(drugs.index)]
 
-    test_label = auc_test[params['y_col_name']]
-    test_input = parse_data(auc_test, expr, GeneSet_Dic, drugs)
-
     modelpath = frm.build_model_path(
         model_file_name=params["model_file_name"],
         model_file_format=params["model_file_format"],
         model_dir=params["input_model_dir"])
 
     model = load_model(str(modelpath))
+    test_label = []
+    test_pred = []
 
-    test_label = test_label.to_numpy().flatten()
-    test_pred = model.predict(test_input).flatten()
+    #Add a loop to avoid memory issues
+    for i in range(0, len(auc_test), 10000):
+        print(f"Processing {i} of {len(auc_test)}")
+        test_label_i = auc_test.iloc[i:i+10000][params['y_col_name']]
+        test_input = parse_data(auc_test.iloc[i:i+10000], expr, GeneSet_Dic, drugs)
+        test_label_i = test_label_i.to_numpy().flatten()
+        test_pred_i = model.predict(test_input).flatten()
+        test_label.extend(test_label_i)
+        test_pred.extend(test_pred_i)
+        
+
+    #test_label = auc_test[params['y_col_name']]
+    #test_input = parse_data(auc_test, expr, GeneSet_Dic, drugs)
+    #test_label = test_label.to_numpy().flatten()
+    #test_pred = model.predict(test_input).flatten()
 
     frm.store_predictions_df(
         y_true=test_label, y_pred=test_pred, stage="tcga_test",
